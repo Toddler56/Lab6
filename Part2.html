@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>React Практикум: 3 задания</title>
+    <style>
+      :root { --bg:#0b1020; --card:#111831; --text:#e9ecf1; --muted:#98a2b3; --accent:#3b82f6; --ok:#22c55e; --danger:#ef4444; }
+      *{box-sizing:border-box}
+      body{margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background:var(--bg); color:var(--text)}
+      .container{max-width:1100px; margin:40px auto; padding:0 20px}
+      .title{font-size:28px; font-weight:800; letter-spacing:.3px; margin-bottom:18px}
+      .grid{display:grid; gap:20px; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr))}
+      .card{background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:20px; box-shadow:0 8px 24px rgba(0,0,0,.25)}
+      .card h2{margin:0 0 10px; font-size:20px}
+      .row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+      .btn{appearance:none; border:1px solid rgba(255,255,255,.12); background:#1b2342; color:var(--text); padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600}
+      .btn:disabled{opacity:.5; cursor:not-allowed}
+      .btn.primary{background:var(--accent); border-color:transparent}
+      .btn.danger{background:#2a2135; border-color:#3b2a44; color:#ffd7e1}
+      input, select{background:#0f1530; border:1px solid rgba(255,255,255,.12); color:var(--text); padding:10px 12px; border-radius:10px; outline:none; width:100%}
+      ul{list-style:none; padding:0; margin:0}
+      li{display:list-item; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed rgba(255,255,255,.08)}
+      .muted{color:var(--muted)}
+      progress{width:100%; height:14px}
+      .counter{font-size:48px; font-weight:900}
+      .badge{display:inline-block; padding:4px 8px; border-radius:20px; background:#13325a; color:#a8d2ff; font-weight:700}
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+      const { useState, useEffect, useMemo, useRef } = React;
+
+      /* ================= ZADANIE 1 ================= */
+      function Task1(){
+        const [count, setCount] = useState(0);
+        
+        const increment = () => setCount(count + 1);
+        const decrement = () => setCount(count - 1);
+        const reset = () => setCount(0);
+        
+        return (
+          <div className="card">
+            <h2>Задание 1</h2>
+            <div className="counter">
+              {count}
+            </div>
+            {count%10===0 && count!==0 && (<div>
+                Молодец!
+            </div>)}
+            <div className="row" style={{marginTop: '20px'}}>
+              <button className="btn danger" onClick={decrement} disabled ={count===0}>
+                -1
+              </button>
+              <button className="btn" onClick={reset}>
+                Сброс
+              </button>
+              <button className="btn primary" onClick={increment}>
+                +1
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      /* ================= ZADANIE 2 ================= */
+      function Task2(){
+    const [tasks, setTasks] = useState([]);
+    const [newTask, setNewTask] = useState('');
+    const [filter, setFilter] = useState('all');
+
+    useEffect(() => {
+    const savedTasks = localStorage.getItem('todo-tasks');
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('todo-tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
+  const addTask = () => {
+    if (newTask.trim() === '') return;
+    const task = {
+      id: Date.now(),
+      text: newTask.trim(),
+      completed: false
+    };
+    
+    setTasks([...tasks, task]);
+    setNewTask('');
+  };
+
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      addTask();
+    }
+  };
+
+  const toggleTask = (id) => {
+    setTasks(tasks.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  };
+
+  const clearCompleted = () => {
+    setTasks(tasks.filter(task => !task.completed));
+  };
+
+  const filteredTasks = useMemo(() => {
+    switch (filter) {
+      case 'active':
+        return tasks.filter(task => !task.completed);
+      case 'completed':
+        return tasks.filter(task => task.completed);
+      default:
+        return tasks;
+    }
+  }, [tasks, filter]);
+
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(task => task.completed).length;
+  const activeTasks = totalTasks - completedTasks;
+
+  return (
+    <div className="card">
+      <h2>Задание 2</h2>
+      <div className="row" style={{marginBottom: '20px'}}>
+        <input
+          type="text"
+          placeholder="Новая задача"
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+          onKeyPress={handleKeyPress}
+          style={{flex: 1}}
+        />
+        <button 
+          className="btn primary" 
+          onClick={addTask}
+          disabled={newTask.trim() === ''}>
+          Добавить
+        </button>
+      </div>
+
+      <div className="row" style={{marginBottom: '15px'}}>
+        <button className="btn"
+          onClick={() => setFilter('all')}>
+          Все
+        </button>
+        <button 
+          className={`btn ${filter === 'active' ? 'primary' : ''}`}
+          onClick={() => setFilter('active')}>
+          Активные
+        </button>
+        <button 
+          className='btn'
+          onClick={() => setFilter('completed')}>
+          Выполненные
+        </button>
+      </div>
+
+      <div style={{marginBottom: '15px', fontSize: '14px', color: 'var(--muted)'}}>
+        Всего: {totalTasks} | Выполнено: {completedTasks}
+      </div>
+
+      {filteredTasks.length === 0 ? (
+        <div>
+          {filter === 'all' ? 'Нет задач' : 
+           filter === 'active' ? 'Нет активных задач' : 
+           'Нет выполненных задач'}
+        </div>) : (
+        <ul>
+          {filteredTasks.map(task => (
+            <li key={task.id}>
+              <input
+                type="checkbox"
+                checked={task.completed}
+                onChange={() => toggleTask(task.id)}/>
+            <span>
+                {task.text}
+            </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {completedTasks > 0 && (
+        <div className="row" style={{marginTop: '15px', justifyContent: 'flex-end'}}>
+          <button 
+            className="btn danger"
+            onClick={clearCompleted}>
+            Удалить выполненные ({completedTasks})
+          </button>
+        </div>
+      )}
+    </div>
+  );
+        
+      }
+
+      /* ================= ZADANIE 3 ================= */
+      const QUESTIONS = [
+        { q: 'Какой хук используют для локального состояния?', options: ['useList', 'useState', 'useReducerize', 'useContextOnly'], answer: 1 },
+        { q: 'Какой проп обязателен для элементов списка?', options: ['className', 'style', 'key', 'id'], answer: 2 },
+        { q: 'Где верно навешивать обработчик клика?', options: ['onclick', 'onClick', 'handleClick()', 'whenClick'], answer: 1 },
+        { q: 'Какой хук подходит для синхронизации с localStorage?', options: ['useId', 'useEffect', 'useMemo', 'useTransition'], answer: 1 },
+        { q: 'Как чаще всего рендерят список?', options: ['map()', 'forEach()', 'reduce()', 'filter()'], answer: 0 },
+      ];
+
+      function Task3(){
+
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [answers, setAnswers] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(20);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  
+  const timerRef = useRef(null);
+  
+  useEffect(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    if (currentQuestion < QUESTIONS.length && !quizCompleted) {
+      setTimeLeft(20);
+      
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            handleAutoNext();
+            return 20;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [currentQuestion, quizCompleted, startOption]);
+  
+  const handleAutoNext = () => {
+    const newAnswers = [...answers, selectedOption];
+    setAnswers(newAnswers);
+    
+    if (currentQuestion + 1 < QUESTIONS.length) {
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedOption(null);
+    } else {
+      setQuizCompleted(true);
+    }
+  };
+  
+  const handleOptionSelect = (optionIndex) => {
+    setSelectedOption(optionIndex);
+  };
+  
+  const handleNextQuestion = () => {
+    if (selectedOption !== null) {
+      const newAnswers = [...answers, selectedOption];
+      setAnswers(newAnswers);
+
+      if (currentQuestion + 1 < QUESTIONS.length) {
+        setCurrentQuestion(currentQuestion + 1);
+        setSelectedOption(null);
+      } else {
+        setQuizCompleted(true);
+      }
+    }
+  };
+  
+  const handleRestartQuiz = () => {
+    setCurrentQuestion(0);
+    setSelectedOption(null);
+    setAnswers([]);
+    setTimeLeft(20);
+    setQuizCompleted(false);
+  };
+  
+  const calculateScore = () => {
+    return answers.reduce((score, answer, index) => {
+      return score + (answer === QUESTIONS[index].answer ? 1 : 0);
+    }, 0);
+  };
+  
+  const progress = ((currentQuestion + 1) / QUESTIONS.length) * 100;
+  
+const [startOption, setStartOption] = useState(false); 
+const changeStartOption = () => {
+  setStartOption(true); 
+};
+
+  if (quizCompleted) {
+    const score = calculateScore();
+    
+    return (
+      <div className="card">
+        <h2>Задание 3</h2>
+        <div className="result-screen">
+          <h3>Тест завершен</h3>
+          <div className="score">{score}/{QUESTIONS.length}</div>
+          <p>
+            {score === QUESTIONS.length ? 'Отличный результат!' : 
+             score >= QUESTIONS.length / 2 ? 'Хороший результат!' : 
+             'Попробуйте еще раз!'}
+          </p>
+          <button className="btn primary" onClick={handleRestartQuiz}>
+            Сделать еще раз
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  const question = QUESTIONS[currentQuestion];
+  return (
+    <div className="card">
+      <h2>Задание 3</h2>
+      
+      <div>
+        <span>Вопрос {currentQuestion + 1} / {QUESTIONS.length} </span>
+        <span>
+          {timeLeft} сек
+        </span>
+      </div>
+      
+      <progress value={progress} max="100" />
+      
+      <h3 style={{margin: '20px 0'}}>{question.q}</h3>
+      
+      <div>
+        {question.options.map((option, index) => (
+          <div 
+            key={index}
+            className={`quiz-option ${selectedOption === index ? 'selected' : ''}`}
+            onClick={() => handleOptionSelect(index)}>
+            <input 
+              type="radio" 
+              name="quiz-option"
+              checked={selectedOption === index}
+              onChange={() => handleOptionSelect(index)}/>
+            <span>{option}</span>
+          </div>
+        ))}
+      </div>
+      
+      <div className="row" style={{marginTop: '20px', justifyContent: 'space-between'}}>
+        <button 
+          className="btn primary" 
+          onClick={handleNextQuestion}
+          disabled={selectedOption === null}>
+          {currentQuestion + 1 === QUESTIONS.length ? 'Завершить' : 'Далее'}
+        </button>
+      </div>
+    </div>
+  );
+}
+      function App(){
+        return (
+          <div className="container">
+            <div className="title">React.js Практикум: 3 задания (всё в браузере)</div>
+            <div className="grid">
+              <Task1 />
+              <Task2 />
+              <Task3 />
+            {/*
+            <div className="card">            
+                <h2>в функции задания должен происходить рендер блока класса "card"</h2>
+                блоки задания
+            </div> 
+          */}
+           </div>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App/>);
+    </script>
+  </body>
+</html>
